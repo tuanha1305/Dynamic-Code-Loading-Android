@@ -1,0 +1,1 @@
+rootProject.name = "ktor-code-update-server"
