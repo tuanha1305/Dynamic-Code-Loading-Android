@@ -1,9 +1,12 @@
 package io.github.tuanictu97.dynamiccodeloading
 
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import androidx.annotation.RequiresApi
 import dalvik.system.DexClassLoader
+import dalvik.system.InMemoryDexClassLoader
 import dalvik.system.PathClassLoader
 import java.io.ByteArrayInputStream
 import java.io.DataInputStream
@@ -17,6 +20,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var pathLoader: PathClassLoader
     private lateinit var buffer: ByteArray
     private lateinit var btBuffer: ByteBuffer
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -27,6 +31,21 @@ class MainActivity : AppCompatActivity() {
         }catch (e: Exception) {
             // show log when load file error
         }
+
+        // PathClassLoader
+        pathLoader = pathCl(DEX_NAME)
+        val loadClassPath = pathLoader.loadClass("io.github.tuanictu97.codedynamic")
+        val checkMethodPath = loadClassPath.getMethod("getDemoCodeLoading")
+        val clInPath = loadClassPath.newInstance()
+
+        // InMemoryDexClassLoader
+        btBuffer = ByteBuffer.wrap(buffer)
+        val lder = InMemoryDexClassLoader(btBuffer, this.javaClass.classLoader)
+        val mt = lder.loadClass("io.github.tuanictu97.codedynamic")
+        val checkMethodInMemory = mt.getMethod("getDemoCodeLoading")
+        val newcl = mt.newInstance()
+
+        Log.d("Result", checkMethodInMemory.invoke(newcl)!!.toString())
     }
 
     private fun classLoadDexFile(dexFileName: String): DexClassLoader {
